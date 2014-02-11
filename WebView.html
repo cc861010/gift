@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>抽奖</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <!--http://hellohappy.org/css3-buttons/-->
+    <link rel="stylesheet" href="lib/buttons.css" type="text/css" media="screen">
+    <link rel="stylesheet" href="lib/bootstrap.min.css">
+    <link rel="stylesheet" href="lib/bootstrap-theme.min.css">
+    <style>
+        #title{
+            position:absolute;
+            top:2%;
+            left:25%;
+            font-size: 65px;
+            font-weight:bold;
+            color: red;
+        }
+        span{
+            /*margin-left: 10px;*/
+            margin-top: 10px;
+            font-family: '微软雅黑';
+            font-size: 47px;
+            color: #f5f5f5;
+        }
+        #draw td{
+            /*border:5px ridge blue;*/
+            width: 30px;
+        }
+        body{
+            TEXT-ALIGN: center;
+            background-image: url(lib/bg9.jpg);
+            /*background-color: #000000;*/
+        }
+        #buttons{
+            margin-bottom: 50px;
+            position:absolute;
+            top:85%;
+            left:25%;
+        }
+        #draw{
+            position:absolute;
+            top:15%;
+            left:7%;
+            width:80%;
+            height:100px;
+        }
+    </style>
+
+
+    <script type="text/javascript" src="lib/jquery-1.10.1.min.js"></script>
+    <script type="text/javascript" src="lib/jquery.jplayer.min.js"></script>
+    <script src="lib/bootstrap.min.js"></script>
+
+    <script type="text/javascript" src="lib/model.js"></script>
+    <script type="text/javascript" src="lib/config.js"></script>
+
+    <script type="text/javascript">
+    $(document).ready(function(){
+
+        var draw = new Draw();
+        draw.addGiftArray(giftList);
+        draw.addPersonArray(persons);
+
+//        draw.drawN(15)
+//        draw.drawN(15)
+//        draw.drawN(15)
+//        draw.drawN(15)
+//        draw.drawN(15)
+//
+//        draw.print();
+
+        window.run = function begin(draw){
+            var draw = draw;
+            //人数总数为75
+            var totalNumber = 75;
+            //每批40人
+            var n = 15;
+            var times = (totalNumber%n==0)?totalNumber/n:Math.ceil(totalNumber/n);
+            var currentTime = times;
+
+            var timerPerson;
+            var timerGift;
+            return new function(){
+                this.runPerson = function(){
+                    clearInterval(timerPerson);
+                    timerPerson= setInterval(function(){
+                        var r = draw.randomPersons(n);
+                        var s='';
+                        for(var i=0;i< r.length;i++){
+                            s+= r[i].toStr();
+                        }
+                        show('person',r);
+                        //document.getElementById("person").innerHTML = s;
+                    },10)
+                }
+                this.runGift = function(){
+                    clearInterval(timerGift);
+                    timerGift= setInterval(function(){
+                        var r = draw.randomGifts(n);
+                        var s='';
+                        for(var i=0;i< r.length;i++){
+                            s+= r[i].toStr();
+                        }
+                        show('gift',r);
+                        //document.getElementById("gift").innerHTML = s;
+                    },10)
+                }
+                this.stop = function(){
+                    clearInterval(timerPerson);
+                    clearInterval(timerGift);
+                }
+                this.next = function(){
+
+                    clearInterval(timerPerson);
+                    clearInterval(timerGift);
+                    jQuery('#person').html('');
+                    jQuery('#gift').html('');
+
+                    if(currentTime>2){
+                        //jQuery('#button3').html('继续(剩'+(currentTime-1)+'批)');
+                        jQuery('#button3').html('继续');
+                        draw.giftsToPersons();
+                    }else if(currentTime==1){
+                        //jQuery('#button3').html('继续(剩'+(currentTime-1)+'批)');
+                        jQuery('#button3').html('继续');
+                        draw.giftsToPersons();
+                        showAll();
+                    }else if(currentTime==2){
+                        jQuery('#button3').html('得奖名单');
+                        draw.giftsToPersons();
+                    }
+
+                    currentTime--;
+
+                }
+            }
+        }(draw);
+
+        function show(tableId,values){
+            var tr = jQuery('#'+tableId);
+            jQuery(tr).html('');
+            jQuery.each(values,function(n,v){
+                jQuery(tr).append('<td><span>'+ v.toStr()+'</span></td>');
+            })
+        }
+
+        function showAll(){
+            jQuery('#buttons').html('');
+            var person = jQuery('#drawTable').html('');
+            jQuery.each(draw.draws,function(n,v){
+                //jQuery(person).append('<tr><td><span>第'+(n+1)+'批获奖名单：</span></td></tr>')
+                jQuery.each(v,function(n1,v1){
+                    jQuery(person).append('<tr><td><span>'+ v1.name+'</span></td><td><span>'+ v1.gift.name+'</span></td></tr>');
+                })
+
+            })
+        }
+
+        var button = function buttonChange(){
+            var i=0;
+            return new function(){
+                this.nextId = 0;
+                this.click = function(){
+                    if(i==3){
+                        this.nextId=0;
+                    }else{
+                        this.nextId = i+1;
+                    }
+
+                    i++;
+
+                    if(i==0){
+                        jQuery('#button0').attr('class','thoughtbot');
+                        jQuery('#button3').attr('class','punch');
+                    }else if(i==1){
+                        jQuery('#button1').attr('class','thoughtbot');
+                        jQuery('#button0').attr('class','punch');
+                    }else if(i==2){
+                        jQuery('#button2').attr('class','thoughtbot');
+                        jQuery('#button1').attr('class','punch');
+                    }else if(i==3){
+                        jQuery('#button3').attr('class','thoughtbot');
+                        jQuery('#button2').attr('class','punch');
+                    }else if(i>3){
+                        i=0;
+                        jQuery('#button3').attr('class','punch');
+                        jQuery('#button0').attr('class','thoughtbot');
+                    }
+
+                    return this.nextId;
+                }
+         }}()
+
+        jQuery('#button0').click(function(){
+            if(button.nextId==0){
+                //jQuery('#chatAudio')[0].play();
+                jQuery("#jquery_jplayer_1").jPlayer("play");
+                run.runPerson();
+                button.click();
+            }
+
+        })
+        jQuery('#button1').click(function(){
+            if(button.nextId==1){
+                run.stop();
+                run.runGift();
+                button.click();
+            }
+
+        })
+        jQuery('#button2').click(function(){
+            if(button.nextId==2){
+                //jQuery('#chatAudio')[0].pause();
+                jQuery.jPlayer.pause();
+                run.stop();
+                button.click();
+            }
+
+        })
+        jQuery('#button3').click(function(){
+            if(button.nextId==3){
+                run.next();
+                button.click();
+            }
+        })
+
+        //mp3Player
+        $("#jquery_jplayer_1").jPlayer({
+            ready: function () {
+                $(this).jPlayer("setMedia", {
+                    mp3: "lib/HotSummer.mp3"
+                });
+            },
+            swfPath: "/lib",
+            supplied: "mp3"
+        });
+    })
+    </script>
+</head>
+
+<body>
+<div>
+    <span id="title">X&nbsp;X&nbsp;X&nbsp;年&nbsp;&nbsp;会&nbsp;&nbsp;抽&nbsp;&nbsp;奖</span>
+</div>
+<div id="draw">
+    <table id="drawTable" class='table table-hove'>
+        <tr id="person"></tr>
+        <tr id="gift"></tr>
+    </table>
+</div>
+<div id="buttons">
+<table>
+    <tr>
+        <td><button id='button0' class="thoughtbot">选人</button></td>
+        <td><button id='button1' class="punch">摇奖</button></td>
+        <td><button id='button2' class="punch">停止</button></td>
+        <td><button id='button3' class="punch">继续</button></td>
+    </tr>
+</table>
+</div>
+<!--<audio id="chatAudio">-->
+    <!--<source src="lib/HotSummer.mp3" type="audio/ogg">-->
+<!--</audio>-->
+
+<div id="jquery_jplayer_1"></div>
+<div id="jp_container_1" style="visibility:hidden">
+    <a href="#" class="jp-play">Play</a>
+    <a href="#" class="jp-pause">Pause</a>
+</div>
+
+</body>
+</html>
